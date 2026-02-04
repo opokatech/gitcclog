@@ -105,4 +105,8 @@ python3 gitcclog_test.py
 
 ## About
 
-Well, this little side-project started in mid-2024 and got almost completed pretty quickly. Then it staled for a year or so and now (2026) it was a good candidate to check it off using AI tools (copilot and a bit of claude). So one evening later here you the missing bits got fixed and it is ready to share. It is far from being perfect, but it does it job.
+Well, this little side-project started in mid-2024 and got almost completed pretty quickly. Then, it
+staled for a year or so. And now, 2026, it was a good candidate to check it off using AI tools
+(copilot and a bit of claude). So after a few more hours put into this, the missing bits got fixed
+and it is ready to share. It is far from being perfect, but it does the job.
+
