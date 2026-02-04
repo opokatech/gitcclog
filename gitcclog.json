@@ -1,0 +1,16 @@
+{
+    "tagPrefix": "",
+    "initialNonPrefixedVersion": "0.1.0",
+    "changelogFile": "CHANGELOG.md",
+    "compareUrlFormat": "https://some-provider/git/branchCompare?baseVersion=GT{{previousTag}}&targetVersion=GT{{currentTag}}",
+    "commitUrlFormat": "https://some-provider/git/MPController/commit/{{hash}}",
+    "issueUrlFormat": "https://some-provider/issue/{{id}}",
+    "help": {
+        "tagPrefix": "Prefix to be used for all tags, e.g. 'v' results in 'v1.0.0'. Only tags with given prefix are recognized.",
+        "initialNonPrefixedVersion": "Initial version number if no version tag is found. The prefix will be added to it.",
+        "changelogFile": "File to write the changelog to. Leave empty if you don't want to write a changelog.",
+        "compareUrlFormat": "URL to compare two versions. Use {{previousTag}} and {{currentTag}} as placeholders.",
+        "commitUrlFormat": "URL to a commit. Use {{hash}} as placeholder.",
+        "issueUrlFormat": "URL to an issue. Use {{id}} as placeholder."
+    }
+}

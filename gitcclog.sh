@@ -1,0 +1,6 @@
+#!/bin/bash
+
+D=$(dirname $(readlink -f $0))
+
+python3 $D/gitcclog.py --config gitcclog.json $*
+
