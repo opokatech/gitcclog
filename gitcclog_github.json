@@ -2,7 +2,7 @@
     "tagPrefix": "",
     "initialNonPrefixedVersion": "0.1.0",
     "changelogFile": "CHANGELOG.md",
-    "compareUrlFormat": "https://github.com/opokatech/gitcclog/compare/{{previousTag}}...{{currentTag}}}",
+    "compareUrlFormat": "https://github.com/opokatech/gitcclog/compare/{{previousTag}}...{{currentTag}}",
     "commitUrlFormat": "https://github.com/opokatech/gitcclog/commit/{{hash}}",
     "issueUrlFormat": "https://github.com/opokatech/gitcclog/issues/{{id}}",
     "help": {
