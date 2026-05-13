@@ -162,7 +162,14 @@ def get_config(path: str) -> dict:
     """
     with open(path) as f:
         data = json.load(f)
-    return data
+    defaults = {
+        "tagPrefix": "",
+        "compareUrlFormat": "",
+        "commitUrlFormat": "",
+        "issueUrlFormat": "",
+    }
+    return {**defaults, **data}
+
 
 
 def get_naked_tag(tag: str, prefix: str = "") -> str:

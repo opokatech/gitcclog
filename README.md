@@ -72,14 +72,14 @@ python3 gitcclog.py --config gitcclog.json --real-run --force-version 2.0.0
 
 See [the example file](gitcclog.json). All keys:
 
-| Key | Description |
-|---|---|
-| `tagPrefix` | Prefix for version tags, e.g. `"v"` results in `v1.0.0`. Only tags with this prefix are recognized from git history. |
-| `initialNonPrefixedVersion` | Starting version when no tag exists yet. The prefix is added to it. |
-| `changelogFile` | Output file for the changelog. Empty string `""` to skip generation. |
-| `compareUrlFormat` | URL template for version comparison links. Placeholders: `{{previousTag}}`, `{{currentTag}}`. |
-| `commitUrlFormat` | URL template for commit links. Placeholder: `{{hash}}`. |
-| `issueUrlFormat` | URL template for issue links. Placeholder: `{{id}}`. |
+| Key | Required | Description |
+|---|---|---|
+| `initialNonPrefixedVersion` | Yes | Starting version when no tag exists yet. The prefix is added to it. |
+| `changelogFile` | Yes | Output file for the changelog. Empty string `""` to skip generation. |
+| `tagPrefix` | No | Prefix for version tags, e.g. `"v"` results in `v1.0.0`. Only tags with this prefix are recognized from git history. Default: `""`. |
+| `compareUrlFormat` | No | URL template for version comparison links. Placeholders: `{{previousTag}}`, `{{currentTag}}`. Default: `""` (no links). |
+| `commitUrlFormat` | No | URL template for commit links. Placeholder: `{{hash}}`. Default: `""` (no links). |
+| `issueUrlFormat` | No | URL template for issue links. Placeholder: `{{id}}`. Default: `""` (no links). |
 
 ## Version bumping
 
