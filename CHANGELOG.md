@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.1.1](https://github.com/opokatech/gitcclog/compare/1.1.0...1.1.1)
+## [1.2.0](https://github.com/opokatech/gitcclog/compare/1.1.1...1.2.0)
+
+
+### Features
+
+* make tagPrefix and URL config keys optional with empty string defaults ([2fcfaab](https://github.com/opokatech/gitcclog/commit/2fcfaab57ee097ad996e76a10c853f0508e6746d))
+
+
+## [1.1.1](https://github.com/opokatech/gitcclog/compare/1.1.0...1.1.1) (2026-02-04)
 
 
 ### Bug Fixes
