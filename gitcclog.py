@@ -316,9 +316,13 @@ def generate_changelog(history: dict, config: dict) -> str:
                 # Add date from the latest commit in this release
                 for commit in history["commits"]:
                     if release["tag"] in commit["tags"]:
-                        date = commit["committer_date"].split()[0]  # Get just the date part
+                        date = commit["committer_date"].split()[0]
                         version_line += f" ({date})"
                         break
+                else:
+                    if history["commits"]:
+                        date = history["commits"][0]["committer_date"].split()[0]
+                        version_line += f" ({date})"
 
                 f.write(f"{version_line}\n\n\n")
 

@@ -320,6 +320,34 @@ class TestGenerateChangelog(unittest.TestCase):
             content = f.read()
         self.assertIn("https://example.com/compare/1.0.0...1.1.0", content)
 
+    def test_new_release_has_date(self):
+        history = {
+            "commits": [
+                {
+                    "full_hash": "bbb2222222222",
+                    "short_hash": "bbb2222",
+                    "committer_date": "2025-03-20 10:00:00 +0000",
+                    "tags": [],
+                    "footers": [],
+                    "title": {"type": "feat", "scope": None, "description": "new thing", "breaking": False},
+                },
+                {
+                    "full_hash": "aaa1111111111",
+                    "short_hash": "aaa1111",
+                    "committer_date": "2025-01-10 10:00:00 +0000",
+                    "tags": ["1.0.0"],
+                    "footers": [],
+                    "title": {"type": "feat", "scope": None, "description": "initial", "breaking": False},
+                },
+            ],
+            "lastTag": "1.0.0",
+        }
+        gitcclog.generate_changelog(history, self.base_config)
+        with open(self.changelog_path) as f:
+            content = f.read()
+        self.assertIn("1.1.0", content)
+        self.assertIn("(2025-03-20)", content)
+
 
 class TestCommitAndTag(unittest.TestCase):
     def setUp(self):
