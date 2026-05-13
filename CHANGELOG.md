@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.0](https://github.com/opokatech/gitcclog/compare/1.1.1...1.2.0)
+## [1.2.1](https://github.com/opokatech/gitcclog/compare/1.2.0...1.2.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* add date to new release header in changelog ([5ba4ab3](https://github.com/opokatech/gitcclog/commit/5ba4ab3884ef2d69de0590662b55deaab95390c9))
+
+## [1.2.0](https://github.com/opokatech/gitcclog/compare/1.1.1...1.2.0) (2026-05-13)
 
 
 ### Features
