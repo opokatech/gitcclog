@@ -6,11 +6,11 @@
     "commitUrlFormat": "https://some-provider/git/MPController/commit/{{hash}}",
     "issueUrlFormat": "https://some-provider/issue/{{id}}",
     "help": {
-        "tagPrefix": "Prefix to be used for all tags, e.g. 'v' results in 'v1.0.0'. Only tags with given prefix are recognized.",
-        "initialNonPrefixedVersion": "Initial version number if no version tag is found. The prefix will be added to it.",
-        "changelogFile": "File to write the changelog to. Leave empty if you don't want to write a changelog.",
-        "compareUrlFormat": "URL to compare two versions. Use {{previousTag}} and {{currentTag}} as placeholders.",
-        "commitUrlFormat": "URL to a commit. Use {{hash}} as placeholder.",
-        "issueUrlFormat": "URL to an issue. Use {{id}} as placeholder."
+        "tagPrefix": "Optional. Prefix for all tags, e.g. 'v' results in 'v1.0.0'. Only tags with given prefix are recognized. Can be omitted or set to '' for no prefix.",
+        "initialNonPrefixedVersion": "Required. Initial version number if no version tag is found. The prefix will be added to it.",
+        "changelogFile": "Required. File to write the changelog to. Set to '' to skip changelog generation (note: --real-run will also skip commit and tag when empty).",
+        "compareUrlFormat": "Optional. URL to compare two versions. Use {{previousTag}} and {{currentTag}} as placeholders. Can be omitted or set to '' to disable comparison links.",
+        "commitUrlFormat": "Optional. URL to a commit. Use {{hash}} as placeholder. Can be omitted or set to '' to disable commit links.",
+        "issueUrlFormat": "Optional. URL to an issue. Use {{id}} as placeholder. Can be omitted or set to '' to disable issue links."
     }
 }
