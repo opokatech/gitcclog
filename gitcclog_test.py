@@ -4,7 +4,15 @@ from unittest.mock import patch, call
 import gitcclog
 import logging
 import os
+import shutil
+import subprocess
 import tempfile
+from types import SimpleNamespace
+
+
+def _returncode(code, stderr=""):
+    """Build a stand-in for a subprocess.CompletedProcess with a given returncode."""
+    return SimpleNamespace(returncode=code, stderr=stderr, stdout="")
 
 
 class TestGitComCon(unittest.TestCase):
@@ -355,11 +363,15 @@ class TestCommitAndTag(unittest.TestCase):
 
     @patch("gitcclog.subprocess.run")
     def test_commit_and_tag_runs_git_commands(self, mock_run):
-        mock_run.return_value.returncode = 0
+        # add: ok, diff --cached --quiet: 1 (changes staged), commit: ok, tag: ok
+        mock_run.side_effect = [
+            _returncode(0), _returncode(1), _returncode(0), _returncode(0),
+        ]
         result = gitcclog.commit_and_tag("CHANGELOG.md", "v", "1.2.0")
-        self.assertTrue(result)
+        self.assertEqual(result, "released")
         expected_calls = [
             call(["git", "add", "CHANGELOG.md"], capture_output=True, text=True),
+            call(["git", "diff", "--cached", "--quiet"], capture_output=True, text=True),
             call(["git", "commit", "-m", "chore(release): v1.2.0"], capture_output=True, text=True),
             call(["git", "tag", "v1.2.0"], capture_output=True, text=True),
         ]
@@ -367,11 +379,14 @@ class TestCommitAndTag(unittest.TestCase):
 
     @patch("gitcclog.subprocess.run")
     def test_commit_and_tag_no_prefix(self, mock_run):
-        mock_run.return_value.returncode = 0
+        mock_run.side_effect = [
+            _returncode(0), _returncode(1), _returncode(0), _returncode(0),
+        ]
         result = gitcclog.commit_and_tag("CHANGELOG.md", "", "1.2.0")
-        self.assertTrue(result)
+        self.assertEqual(result, "released")
         expected_calls = [
             call(["git", "add", "CHANGELOG.md"], capture_output=True, text=True),
+            call(["git", "diff", "--cached", "--quiet"], capture_output=True, text=True),
             call(["git", "commit", "-m", "chore(release): 1.2.0"], capture_output=True, text=True),
             call(["git", "tag", "1.2.0"], capture_output=True, text=True),
         ]
@@ -382,7 +397,49 @@ class TestCommitAndTag(unittest.TestCase):
         mock_run.return_value.returncode = 1
         mock_run.return_value.stderr = "error"
         result = gitcclog.commit_and_tag("CHANGELOG.md", "", "1.2.0")
-        self.assertFalse(result)
+        self.assertEqual(result, "failed")
+
+
+class TestCommitAndTagNoop(unittest.TestCase):
+    """When the changelog is unchanged, releasing must be a no-op, not a failure."""
+
+    def setUp(self):
+        logging.getLogger().setLevel(logging.FATAL)
+        self.origin_cwd = os.getcwd()
+        self.repo = tempfile.mkdtemp()
+        os.chdir(self.repo)
+        self._git("init")
+        self._git("config", "user.email", "t@t.t")
+        self._git("config", "user.name", "t")
+        with open("CHANGELOG.md", "w") as f:
+            f.write("# Changelog\n")
+        self._git("add", "CHANGELOG.md")
+        self._git("commit", "-m", "chore(release): 1.2.2")
+
+    def tearDown(self):
+        os.chdir(self.origin_cwd)
+        shutil.rmtree(self.repo)
+
+    def _git(self, *args):
+        subprocess.run(["git", *args], capture_output=True, text=True, check=True)
+
+    def test_unchanged_changelog_is_noop_not_failure(self):
+        # CHANGELOG.md already committed and untouched -> nothing to commit.
+        result = gitcclog.commit_and_tag("CHANGELOG.md", "", "1.2.3")
+        self.assertEqual(result, "noop")
+
+    def test_unchanged_changelog_creates_no_tag(self):
+        gitcclog.commit_and_tag("CHANGELOG.md", "", "1.2.3")
+        tags = subprocess.run(["git", "tag"], capture_output=True, text=True)
+        self.assertEqual(tags.stdout.strip(), "")
+
+    def test_changed_changelog_commits_and_tags(self):
+        with open("CHANGELOG.md", "w") as f:
+            f.write("# Changelog\n\nnew content\n")
+        result = gitcclog.commit_and_tag("CHANGELOG.md", "", "1.2.3")
+        self.assertEqual(result, "released")
+        tags = subprocess.run(["git", "tag"], capture_output=True, text=True)
+        self.assertEqual(tags.stdout.strip(), "1.2.3")
 
 
 class TestMainFlow(unittest.TestCase):
@@ -412,7 +469,7 @@ class TestMainFlow(unittest.TestCase):
         gitcclog.run(config, new_tag, real_run=False, changelog_file=self.changelog_path)
         mock_commit.assert_not_called()
 
-    @patch("gitcclog.commit_and_tag", return_value=True)
+    @patch("gitcclog.commit_and_tag", return_value="released")
     @patch("gitcclog.get_git_history")
     def test_no_dry_run_commits(self, mock_history, mock_commit):
         mock_history.return_value = ""
@@ -427,7 +484,7 @@ class TestMainFlow(unittest.TestCase):
         gitcclog.run(config, "0.1.0", real_run=True, changelog_file=self.changelog_path)
         mock_commit.assert_called_once_with(self.changelog_path, "v", "0.1.0")
 
-    @patch("gitcclog.commit_and_tag", return_value=True)
+    @patch("gitcclog.commit_and_tag", return_value="released")
     def test_force_version_overrides_computed(self, mock_commit):
         config = {
             "tagPrefix": "v",

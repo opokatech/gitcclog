@@ -353,15 +353,27 @@ def generate_changelog(history: dict, config: dict) -> str:
     return new_naked_tag
 
 
-def commit_and_tag(changelog_file: str, tag_prefix: str, naked_tag: str) -> bool:
+def commit_and_tag(changelog_file: str, tag_prefix: str, naked_tag: str) -> str:
     """
     Stage the changelog file, commit with a release message, and create a git tag.
-    Returns True on success, False on failure.
+    Returns "released" on success, "noop" when the changelog is unchanged (nothing
+    to commit), or "failed" on a git error.
     """
     full_tag = tag_prefix + naked_tag
 
+    log.debug("Running: git add %s", changelog_file)
+    add = subprocess.run(["git", "add", changelog_file], capture_output=True, text=True)
+    if add.returncode != 0:
+        log.error("Failed staging %s: %s", changelog_file, add.stderr)
+        return "failed"
+
+    # An unchanged changelog means there is nothing to release; skip commit and
+    # tag rather than failing on git's "nothing to commit" error.
+    staged = subprocess.run(["git", "diff", "--cached", "--quiet"], capture_output=True, text=True)
+    if staged.returncode == 0:
+        return "noop"
+
     steps = [
-        (["git", "add", changelog_file], f"staging {changelog_file}"),
         (["git", "commit", "-m", f"chore(release): {full_tag}"], f"committing release {full_tag}"),
         (["git", "tag", full_tag], f"tagging {full_tag}"),
     ]
@@ -371,9 +383,9 @@ def commit_and_tag(changelog_file: str, tag_prefix: str, naked_tag: str) -> bool
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             log.error("Failed %s: %s", description, res.stderr)
-            return False
+            return "failed"
 
-    return True
+    return "released"
 
 
 def run(config: dict, new_naked_tag: str, real_run: bool, changelog_file: str) -> None:
@@ -390,9 +402,11 @@ def run(config: dict, new_naked_tag: str, real_run: bool, changelog_file: str) -
         log.info("No changelog file configured, skipping commit.")
         return
 
-    success = commit_and_tag(changelog_file, config["tagPrefix"], new_naked_tag)
-    if success:
+    result = commit_and_tag(changelog_file, config["tagPrefix"], new_naked_tag)
+    if result == "released":
         log.info("Released %s", full_tag)
+    elif result == "noop":
+        log.info("Nothing to release for %s; changelog unchanged.", full_tag)
     else:
         log.error("Release failed for %s", full_tag)
         exit(1)
