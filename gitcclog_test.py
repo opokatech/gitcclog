@@ -371,8 +371,9 @@ class TestCommitAndTag(unittest.TestCase):
         self.assertEqual(result, "released")
         expected_calls = [
             call(["git", "add", "CHANGELOG.md"], capture_output=True, text=True),
-            call(["git", "diff", "--cached", "--quiet"], capture_output=True, text=True),
-            call(["git", "commit", "-m", "chore(release): v1.2.0"], capture_output=True, text=True),
+            call(["git", "diff", "--cached", "--quiet", "--", "CHANGELOG.md"], capture_output=True, text=True),
+            call(["git", "commit", "-m", "chore(release): v1.2.0", "--", "CHANGELOG.md"],
+                 capture_output=True, text=True),
             call(["git", "tag", "v1.2.0"], capture_output=True, text=True),
         ]
         mock_run.assert_has_calls(expected_calls)
@@ -386,8 +387,9 @@ class TestCommitAndTag(unittest.TestCase):
         self.assertEqual(result, "released")
         expected_calls = [
             call(["git", "add", "CHANGELOG.md"], capture_output=True, text=True),
-            call(["git", "diff", "--cached", "--quiet"], capture_output=True, text=True),
-            call(["git", "commit", "-m", "chore(release): 1.2.0"], capture_output=True, text=True),
+            call(["git", "diff", "--cached", "--quiet", "--", "CHANGELOG.md"], capture_output=True, text=True),
+            call(["git", "commit", "-m", "chore(release): 1.2.0", "--", "CHANGELOG.md"],
+                 capture_output=True, text=True),
             call(["git", "tag", "1.2.0"], capture_output=True, text=True),
         ]
         mock_run.assert_has_calls(expected_calls)
@@ -432,6 +434,22 @@ class TestCommitAndTagNoop(unittest.TestCase):
         gitcclog.commit_and_tag("CHANGELOG.md", "", "1.2.3")
         tags = subprocess.run(["git", "tag"], capture_output=True, text=True)
         self.assertEqual(tags.stdout.strip(), "")
+
+    def test_unrelated_staged_file_does_not_cause_release(self):
+        # A file staged by the user for unrelated work must not be swept into
+        # the release commit, and must not fool the noop check either.
+        with open("unrelated.txt", "w") as f:
+            f.write("work in progress\n")
+        self._git("add", "unrelated.txt")
+
+        result = gitcclog.commit_and_tag("CHANGELOG.md", "", "1.2.3")
+        self.assertEqual(result, "noop")
+
+        tags = subprocess.run(["git", "tag"], capture_output=True, text=True)
+        self.assertEqual(tags.stdout.strip(), "")
+        # the unrelated file must remain staged, not committed
+        status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
+        self.assertEqual(status.stdout.strip(), "A  unrelated.txt")
 
     def test_changed_changelog_commits_and_tags(self):
         with open("CHANGELOG.md", "w") as f:
@@ -532,6 +550,14 @@ class TestParseRawCommits(unittest.TestCase):
         history = gitcclog.parse_raw_commits("", "")
         self.assertEqual(len(history["commits"]), 0)
         self.assertIsNone(history["lastTag"])
+
+    def test_ignores_prerelease_suffixed_tag_without_crashing(self):
+        # A tag like "v1.2.3-rc1" starts with a valid X.Y.Z but isn't one;
+        # it must be skipped, not crash tag_to_numbers' int() conversion.
+        raw = "abc1234567890(abc1234)(tag: v1.2.3-rc1)(2025-01-15 10:00:00 +0000)\nfeat: thing\n" + gitcclog.SCISSORS
+        history = gitcclog.parse_raw_commits(raw, "v")
+        self.assertIsNone(history["lastTag"])
+        self.assertEqual(history["commits"][0]["tags"], [])
 
 
 if __name__ == '__main__':

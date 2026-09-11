@@ -106,12 +106,12 @@ def parse_raw_commits(raw_commit_messages: str, tag_prefix: str) -> dict:
             # leave only tags
             all_tags = [decor.replace("tag: ", "") for decor in decorations if decor.startswith("tag: ")]
             # filter only tags with the given prefix and has a valid numerical form
-            tags = [tag for tag in all_tags if re.match(tag_prefix + r"\d+\.\d+\.\d+", tag) is not None]
+            tags = [tag for tag in all_tags if re.match(tag_prefix + r"\d+\.\d+\.\d+$", tag) is not None]
             # sort tags by version
             tags.sort(key=lambda tag_str: tag_to_numbers(tag_str, tag_prefix))
 
             if len(tags) > 0:
-                max_tag = max(tags, key=lambda tag_str: tag_to_numbers(tag_str, tag_prefix))
+                max_tag = tags[-1]  # tags is already sorted ascending above
 
                 if history["lastTag"] is None or \
                         tag_to_numbers(max_tag, tag_prefix) > tag_to_numbers(history["lastTag"], tag_prefix):
@@ -190,7 +190,6 @@ def get_next_tag(previous_naked_tag: str | None, breaking_changes: bool, new_fea
     @param previous_naked_tag: the previous tag without the prefix
     @param breaking_changes: if there are breaking changes
     @param new_features: if there are new features
-    @param new_fixes: if there are new fixes
     @return: the next tag as string
     """
     if previous_naked_tag is None:
@@ -368,13 +367,16 @@ def commit_and_tag(changelog_file: str, tag_prefix: str, naked_tag: str) -> str:
         return "failed"
 
     # An unchanged changelog means there is nothing to release; skip commit and
-    # tag rather than failing on git's "nothing to commit" error.
-    staged = subprocess.run(["git", "diff", "--cached", "--quiet"], capture_output=True, text=True)
+    # tag rather than failing on git's "nothing to commit" error. Scoped to the
+    # changelog file so unrelated staged changes don't affect this decision.
+    staged = subprocess.run(["git", "diff", "--cached", "--quiet", "--", changelog_file],
+                             capture_output=True, text=True)
     if staged.returncode == 0:
         return "noop"
 
     steps = [
-        (["git", "commit", "-m", f"chore(release): {full_tag}"], f"committing release {full_tag}"),
+        (["git", "commit", "-m", f"chore(release): {full_tag}", "--", changelog_file],
+         f"committing release {full_tag}"),
         (["git", "tag", full_tag], f"tagging {full_tag}"),
     ]
 
