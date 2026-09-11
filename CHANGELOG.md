@@ -2,11 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.3](https://github.com/opokatech/gitcclog/compare/1.2.2...1.2.3) (2026-07-01)
+## [1.2.3](https://github.com/opokatech/gitcclog/compare/1.2.2...1.2.3) (2026-09-11)
 
 
 ### Bug Fixes
 
+* scope release commit to changelog file and reject suffixed tags ([367914f](https://github.com/opokatech/gitcclog/commit/367914fba2087189837d219c0bf5faf4593b447d))
 * treat unchanged changelog as no-op instead of failing release ([1207f91](https://github.com/opokatech/gitcclog/commit/1207f916105c7a8633594ec9b68ab37207e16821))
 
 ## [1.2.2](https://github.com/opokatech/gitcclog/compare/1.2.1...1.2.2) (2026-05-13)
